@@ -4,7 +4,9 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import LeaveCard from '../components/LeaveCard';
+import Icon from '../components/Icon';
 import { toast } from 'react-toastify';
+import { formatDate, statusBadgeClass, leaveTypeLabel } from '../utils/helpers';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -21,29 +23,21 @@ const Dashboard = () => {
     try {
       const [statsRes, leavesRes] = await Promise.all([
         axios.get('/api/leaves/stats'),
-        axios.get('/api/leaves?status=pending')
+        axios.get('/api/leaves')
       ]);
 
       setStats(statsRes.data);
-      setRecentLeaves(leavesRes.data.leaves.slice(0, 5));
+      // Sort by applied date desc so truly-recent items appear first
+      const sorted = [...leavesRes.data.leaves].sort(
+        (a, b) => new Date(b.appliedAt) - new Date(a.appliedAt)
+      );
+      setRecentLeaves(sorted.slice(0, 5));
     } catch (error) {
       toast.error('Error loading dashboard data');
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const getStatusBadge = (status) => {
-    return <span className={`badge badge-${status}`}>{status}</span>;
-  };
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
   };
 
   if (loading) {
@@ -61,7 +55,7 @@ const Dashboard = () => {
       <div className="dashboard-container">
         <div className="dashboard-header">
           <div>
-            <h1>Welcome back, {user?.firstName}! 👋</h1>
+            <h1>Welcome back, {user?.firstName}</h1>
             <p>Here's your leave overview</p>
           </div>
           <Link to="/apply-leave" className="btn btn-primary">
@@ -72,60 +66,20 @@ const Dashboard = () => {
         <div className="dashboard-section">
           <h2>Leave Balances</h2>
           <div className="grid grid-4">
-            <LeaveCard
-              title="Casual Leave"
-              value={stats?.balances?.casual || 0}
-              icon="🏖️"
-              color="#3b82f6"
-            />
-            <LeaveCard
-              title="Medical Leave"
-              value={stats?.balances?.medical || 0}
-              icon="🏥"
-              color="#ef4444"
-            />
-            <LeaveCard
-              title="Earned Leave"
-              value={stats?.balances?.earned || 0}
-              icon="⭐"
-              color="#10b981"
-            />
-            <LeaveCard
-              title="Unpaid Leave"
-              value={stats?.balances?.unpaid || 0}
-              icon="📅"
-              color="#f59e0b"
-            />
+            <LeaveCard title="Casual Leave"   value={stats?.balances?.casual  || 0} icon="sun"         color="#2563eb" />
+            <LeaveCard title="Medical Leave"  value={stats?.balances?.medical || 0} icon="heart"       color="#dc2626" />
+            <LeaveCard title="Earned Leave"   value={stats?.balances?.earned  || 0} icon="award"       color="#16a34a" />
+            <LeaveCard title="Unpaid Leave"   value={stats?.balances?.unpaid  || 0} icon="dollar-sign" color="#d97706" />
           </div>
         </div>
 
         <div className="dashboard-section">
           <h2>Leave Statistics (This Year)</h2>
           <div className="grid grid-4">
-            <LeaveCard
-              title="Total Leaves"
-              value={stats?.stats?.total || 0}
-              icon="📊"
-              color="#8b5cf6"
-            />
-            <LeaveCard
-              title="Pending"
-              value={stats?.stats?.pending || 0}
-              icon="⏳"
-              color="#f59e0b"
-            />
-            <LeaveCard
-              title="Approved"
-              value={stats?.stats?.approved || 0}
-              icon="✅"
-              color="#10b981"
-            />
-            <LeaveCard
-              title="Rejected"
-              value={stats?.stats?.rejected || 0}
-              icon="❌"
-              color="#ef4444"
-            />
+            <LeaveCard title="Total Leaves" value={stats?.stats?.total    || 0} icon="bar-chart"   color="#2563eb" />
+            <LeaveCard title="Pending"       value={stats?.stats?.pending  || 0} icon="clock"       color="#d97706" />
+            <LeaveCard title="Approved"      value={stats?.stats?.approved || 0} icon="check-circle" color="#16a34a" />
+            <LeaveCard title="Rejected"      value={stats?.stats?.rejected || 0} icon="x-circle"    color="#dc2626" />
           </div>
         </div>
 
@@ -139,10 +93,11 @@ const Dashboard = () => {
 
           {recentLeaves.length === 0 ? (
             <div className="card">
-              <p className="no-data">No pending leave requests</p>
+              <p className="no-data">No leave requests yet</p>
             </div>
           ) : (
             <div className="card">
+              <div className="table-responsive">
               <table className="table">
                 <thead>
                   <tr>
@@ -156,15 +111,16 @@ const Dashboard = () => {
                 <tbody>
                   {recentLeaves.map((leave) => (
                     <tr key={leave._id}>
-                      <td className="capitalize">{leave.leaveType}</td>
+                      <td>{leaveTypeLabel(leave.leaveType)}</td>
                       <td>{formatDate(leave.startDate)}</td>
                       <td>{formatDate(leave.endDate)}</td>
                       <td>{leave.numberOfDays}</td>
-                      <td>{getStatusBadge(leave.status)}</td>
+                      <td><span className={statusBadgeClass(leave.status)}>{leave.status}</span></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>
@@ -173,18 +129,18 @@ const Dashboard = () => {
           <h2>Quick Actions</h2>
           <div className="quick-actions">
             <Link to="/apply-leave" className="action-card">
-              <span className="action-icon">📝</span>
+              <span className="action-icon"><Icon name="calendar" size={24} color="#2563eb" /></span>
               <h3>Apply for Leave</h3>
               <p>Submit a new leave request</p>
             </Link>
             <Link to="/leave-history" className="action-card">
-              <span className="action-icon">📋</span>
+              <span className="action-icon"><Icon name="history" size={24} color="#2563eb" /></span>
               <h3>Leave History</h3>
               <p>View all your leave requests</p>
             </Link>
             {user?.role !== 'team_member' && (
               <Link to="/manager" className="action-card">
-                <span className="action-icon">👥</span>
+                <span className="action-icon"><Icon name="users" size={24} color="#2563eb" /></span>
                 <h3>Manager Panel</h3>
                 <p>Manage team leave requests</p>
               </Link>

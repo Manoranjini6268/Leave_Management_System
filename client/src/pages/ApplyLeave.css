@@ -1,38 +1,46 @@
 .apply-leave-container {
-  max-width: 800px;
+  max-width: 780px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 32px var(--page-pad, 24px);
 }
 
 .apply-leave-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
   padding: 32px;
+  box-shadow: var(--shadow-xs);
 }
 
 .apply-leave-card h1 {
-  font-size: 28px;
-  color: #111827;
-  margin: 0 0 8px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
-  color: #6b7280;
+  color: var(--color-text-secondary);
+  font-size: 13px;
   margin: 0 0 24px 0;
 }
 
 .leave-balances-summary {
-  background: #f9fafb;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 32px;
+  background: var(--color-neutral-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 28px;
 }
 
 .leave-balances-summary h3 {
-  font-size: 16px;
-  color: #374151;
-  margin: 0 0 16px 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  margin: 0 0 14px 0;
 }
 
 .balances-grid {
@@ -46,20 +54,25 @@
   flex-direction: column;
   align-items: center;
   padding: 12px;
-  background: white;
-  border-radius: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .balance-label {
-  font-size: 12px;
-  color: #6b7280;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-bottom: 4px;
 }
 
 .balance-value {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: #111827;
+  color: var(--color-text);
+  line-height: 1.1;
 }
 
 .leave-form {
@@ -73,11 +86,14 @@
 }
 
 .days-info {
-  padding: 12px;
-  background: #dbeafe;
-  border-radius: 6px;
-  color: #1e40af;
+  padding: 10px 16px;
+  background: var(--color-brand-light);
+  border: 1px solid var(--color-brand-border);
+  border-radius: var(--radius-md);
+  color: var(--color-brand);
   margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 500;
   text-align: center;
 }
 

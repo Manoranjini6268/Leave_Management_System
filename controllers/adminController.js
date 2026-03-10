@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Department = require('../models/Department');
 const LeavePolicy = require('../models/LeavePolicy');
 const Leave = require('../models/Leave');
+const { computeLeaveTypeStats } = require('./managerController');
 
 // @desc    Get all users
 // @route   GET /api/admin/users
@@ -187,9 +188,17 @@ exports.createDepartment = async (req, res) => {
 // @access  Private (Admin)
 exports.updateDepartment = async (req, res) => {
   try {
+    const { name, code, manager, description, isActive } = req.body;
+    const updateFields = {};
+    if (name        !== undefined) updateFields.name        = name;
+    if (code        !== undefined) updateFields.code        = code;
+    if (manager     !== undefined) updateFields.manager     = manager;
+    if (description !== undefined) updateFields.description = description;
+    if (isActive    !== undefined) updateFields.isActive    = isActive;
+
     const department = await Department.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateFields,
       { new: true, runValidators: true }
     ).populate('manager', 'firstName lastName email');
 
@@ -229,7 +238,8 @@ exports.getAllPolicies = async (req, res) => {
 // @access  Private (Admin)
 exports.createPolicy = async (req, res) => {
   try {
-    const policy = await LeavePolicy.create(req.body);
+    const { name, leaveType, annualQuota, maxConsecutiveDays, carryForward, requiresApproval, minimumNotice, description } = req.body;
+    const policy = await LeavePolicy.create({ name, leaveType, annualQuota, maxConsecutiveDays, carryForward, requiresApproval, minimumNotice, description });
 
     res.status(201).json({
       success: true,
@@ -308,17 +318,12 @@ exports.getOrganizationReport = async (req, res) => {
       totalEmployees: totalUsers,
       totalDepartments: totalDepartments,
       leaveStatistics: {
-        total: leaves.length,
-        approved: leaves.filter(l => l.status === 'approved').length,
-        pending: leaves.filter(l => l.status === 'pending').length,
-        rejected: leaves.filter(l => l.status === 'rejected').length,
+        total:     leaves.length,
+        approved:  leaves.filter(l => l.status === 'approved').length,
+        pending:   leaves.filter(l => l.status === 'pending').length,
+        rejected:  leaves.filter(l => l.status === 'rejected').length,
         cancelled: leaves.filter(l => l.status === 'cancelled').length,
-        byType: {
-          casual: leaves.filter(l => l.leaveType === 'casual' && l.status === 'approved').reduce((sum, l) => sum + l.numberOfDays, 0),
-          medical: leaves.filter(l => l.leaveType === 'medical' && l.status === 'approved').reduce((sum, l) => sum + l.numberOfDays, 0),
-          earned: leaves.filter(l => l.leaveType === 'earned' && l.status === 'approved').reduce((sum, l) => sum + l.numberOfDays, 0),
-          unpaid: leaves.filter(l => l.leaveType === 'unpaid' && l.status === 'approved').reduce((sum, l) => sum + l.numberOfDays, 0)
-        }
+        byType:    computeLeaveTypeStats(leaves)
       },
       recentLeaves: leaves.slice(0, 10)
     };

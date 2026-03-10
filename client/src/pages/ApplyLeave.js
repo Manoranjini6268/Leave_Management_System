@@ -48,7 +48,10 @@ const ApplyLeave = () => {
       return;
     }
 
-    if (start < new Date()) {
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
+    if (start < todayMidnight) {
       toast.error('Cannot apply for past dates');
       return;
     }

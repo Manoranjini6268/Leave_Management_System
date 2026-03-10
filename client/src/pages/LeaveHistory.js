@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import { toast } from 'react-toastify';
+import { formatDate, statusBadgeClass, leaveTypeLabel } from '../utils/helpers';
 import './LeaveHistory.css';
 
 const LeaveHistory = () => {
@@ -40,6 +41,20 @@ const LeaveHistory = () => {
     }
   };
 
+  const viewLeaveDetails = (leave) => { setSelectedLeave(leave); };
+  const closeModal = () => { setSelectedLeave(null); };
+
+  // Can only cancel: pending leaves OR approved leaves that haven't started yet
+  const canCancel = (leave) => {
+    if (leave.status === 'pending') return true;
+    if (leave.status === 'approved') {
+      const start = new Date(leave.startDate); start.setHours(0, 0, 0, 0);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      return start > today;
+    }
+    return false;
+  };
+
   const handleCancelLeave = async (leaveId) => {
     if (!window.confirm('Are you sure you want to cancel this leave request?')) {
       return;
@@ -52,26 +67,6 @@ const LeaveHistory = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error cancelling leave request');
     }
-  };
-
-  const getStatusBadge = (status) => {
-    return <span className={`badge badge-${status}`}>{status}</span>;
-  };
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const viewLeaveDetails = (leave) => {
-    setSelectedLeave(leave);
-  };
-
-  const closeModal = () => {
-    setSelectedLeave(null);
   };
 
   if (loading) {
@@ -149,12 +144,12 @@ const LeaveHistory = () => {
                 <tbody>
                   {filteredLeaves.map((leave) => (
                     <tr key={leave._id}>
-                      <td className="capitalize">{leave.leaveType}</td>
+                      <td>{leaveTypeLabel(leave.leaveType)}</td>
                       <td>{formatDate(leave.startDate)}</td>
                       <td>{formatDate(leave.endDate)}</td>
                       <td>{leave.numberOfDays}</td>
                       <td>{formatDate(leave.appliedAt)}</td>
-                      <td>{getStatusBadge(leave.status)}</td>
+                      <td><span className={statusBadgeClass(leave.status)}>{leave.status}</span></td>
                       <td>
                         <div className="action-buttons">
                           <button
@@ -163,7 +158,7 @@ const LeaveHistory = () => {
                           >
                             View
                           </button>
-                          {(leave.status === 'pending' || leave.status === 'approved') && (
+                          {canCancel(leave) && (
                             <button
                               className="btn btn-sm btn-danger"
                               onClick={() => handleCancelLeave(leave._id)}
@@ -191,7 +186,7 @@ const LeaveHistory = () => {
               <div className="modal-body">
                 <div className="detail-row">
                   <strong>Leave Type:</strong>
-                  <span className="capitalize">{selectedLeave.leaveType}</span>
+                  <span>{leaveTypeLabel(selectedLeave.leaveType)}</span>
                 </div>
                 <div className="detail-row">
                   <strong>Start Date:</strong>
@@ -207,7 +202,7 @@ const LeaveHistory = () => {
                 </div>
                 <div className="detail-row">
                   <strong>Status:</strong>
-                  {getStatusBadge(selectedLeave.status)}
+                  <span className={statusBadgeClass(selectedLeave.status)}>{selectedLeave.status}</span>
                 </div>
                 <div className="detail-row">
                   <strong>Applied On:</strong>
@@ -219,8 +214,14 @@ const LeaveHistory = () => {
                 </div>
                 {selectedLeave.approvedBy && (
                   <div className="detail-row">
-                    <strong>Approved/Rejected By:</strong>
+                    <strong>Approved By:</strong>
                     <span>{selectedLeave.approvedBy.firstName} {selectedLeave.approvedBy.lastName}</span>
+                  </div>
+                )}
+                {selectedLeave.rejectedBy && (
+                  <div className="detail-row">
+                    <strong>Rejected By:</strong>
+                    <span>{selectedLeave.rejectedBy.firstName} {selectedLeave.rejectedBy.lastName}</span>
                   </div>
                 )}
                 {selectedLeave.rejectionReason && (

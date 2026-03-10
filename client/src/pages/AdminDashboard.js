@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+import Icon from '../components/Icon';
 import { toast } from 'react-toastify';
 import './AdminDashboard.css';
 
@@ -14,6 +15,7 @@ const AdminDashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
   const [formData, setFormData] = useState({});
+  const [userSearch, setUserSearch] = useState('');
 
   useEffect(() => {
     fetchAdminData();
@@ -168,28 +170,28 @@ const AdminDashboard = () => {
         {report && (
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-icon">👥</div>
+              <div className="stat-icon"><Icon name="users" size={20} color="#2563eb" /></div>
               <div className="stat-content">
                 <h3>Total Employees</h3>
                 <p className="stat-value">{report.totalEmployees}</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">🏢</div>
+              <div className="stat-icon"><Icon name="building" size={20} color="#2563eb" /></div>
               <div className="stat-content">
                 <h3>Departments</h3>
                 <p className="stat-value">{report.totalDepartments}</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">📊</div>
+              <div className="stat-icon"><Icon name="bar-chart" size={20} color="#2563eb" /></div>
               <div className="stat-content">
                 <h3>Total Leaves</h3>
                 <p className="stat-value">{report.leaveStatistics.total}</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">⏳</div>
+              <div className="stat-icon"><Icon name="clock" size={20} color="#d97706" /></div>
               <div className="stat-content">
                 <h3>Pending Requests</h3>
                 <p className="stat-value">{report.leaveStatistics.pending}</p>
@@ -229,9 +231,19 @@ const AdminDashboard = () => {
           <div className="tab-content">
             <div className="section-header">
               <h2>User Management</h2>
-              <button className="btn btn-primary" onClick={() => openModal('createUser')}>
-                Add New User
-              </button>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search by name, email or ID…"
+                  value={userSearch}
+                  onChange={e => setUserSearch(e.target.value)}
+                  style={{ width: '260px' }}
+                />
+                <button className="btn btn-primary" onClick={() => openModal('createUser')}>
+                  Add New User
+                </button>
+              </div>
             </div>
             <div className="card">
               <div className="table-responsive">
@@ -248,12 +260,22 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
+                    {users
+                      .filter(u => {
+                        const q = userSearch.toLowerCase();
+                        if (!q) return true;
+                        return (
+                          `${u.firstName} ${u.lastName}`.toLowerCase().includes(q) ||
+                          u.email.toLowerCase().includes(q) ||
+                          u.employeeId.toLowerCase().includes(q)
+                        );
+                      })
+                      .map((user) => (
                       <tr key={user._id}>
                         <td>{user.firstName} {user.lastName}</td>
                         <td>{user.employeeId}</td>
                         <td>{user.email}</td>
-                        <td className="capitalize">{user.role.replace('_', ' ')}</td>
+                        <td className="capitalize">{user.role.replace(/_/g, ' ')}</td>
                         <td>{user.department?.name || 'N/A'}</td>
                         <td>
                           <span className={`badge ${user.isActive ? 'badge-approved' : 'badge-rejected'}`}>
@@ -543,6 +565,20 @@ const AdminDashboard = () => {
                         <option value="">Select Department</option>
                         {departments.map(dept => (
                           <option key={dept._id} value={dept._id}>{dept.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Manager</label>
+                      <select
+                        name="manager"
+                        className="form-control"
+                        value={formData.manager?._id || formData.manager || ''}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">None</option>
+                        {users.filter(u => u._id !== formData._id && ['team_leader', 'team_manager', 'general_manager'].includes(u.role)).map(user => (
+                          <option key={user._id} value={user._id}>{user.firstName} {user.lastName} ({user.role.replace(/_/g, ' ')})</option>
                         ))}
                       </select>
                     </div>

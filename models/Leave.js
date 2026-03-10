@@ -40,6 +40,13 @@ const leaveSchema = new mongoose.Schema({
   approvedAt: {
     type: Date
   },
+  rejectedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  rejectedAt: {
+    type: Date
+  },
   rejectionReason: {
     type: String,
     maxlength: 500
@@ -54,14 +61,16 @@ const leaveSchema = new mongoose.Schema({
   }]
 });
 
-// Calculate number of days before saving
+// Recalculate number of days only when dates change (avoids redundant work on status updates)
 leaveSchema.pre('save', function(next) {
-  if (this.startDate && this.endDate) {
+  if ((this.isNew || this.isModified('startDate') || this.isModified('endDate')) &&
+      this.startDate && this.endDate) {
     const start = new Date(this.startDate);
-    const end = new Date(this.endDate);
+    const end   = new Date(this.endDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
     const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    this.numberOfDays = diffDays;
+    this.numberOfDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   }
   next();
 });

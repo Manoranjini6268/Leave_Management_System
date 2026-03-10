@@ -27,14 +27,15 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Employee ID already exists' });
     }
 
-    // Create user
+    // Create user - public registration is always team_member
+    // Admins create higher-privilege accounts via the admin panel
     const user = await User.create({
       firstName,
       lastName,
       email,
       password,
       employeeId,
-      role: role || 'team_member',
+      role: 'team_member',
       department
     });
 

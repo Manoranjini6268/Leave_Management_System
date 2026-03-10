@@ -11,6 +11,7 @@ import ApplyLeave from './pages/ApplyLeave';
 import LeaveHistory from './pages/LeaveHistory';
 import ManagerDashboard from './pages/ManagerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import Profile from './pages/Profile';
 import './App.css';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
             <Route path="/leave-history" element={<PrivateRoute><LeaveHistory /></PrivateRoute>} />
             <Route path="/manager" element={<PrivateRoute roles={['team_leader', 'team_manager', 'general_manager']}><ManagerDashboard /></PrivateRoute>} />
             <Route path="/admin" element={<PrivateRoute roles={['general_manager']}><AdminDashboard /></PrivateRoute>} />
+            <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
           <ToastContainer position="top-right" autoClose={3000} />
